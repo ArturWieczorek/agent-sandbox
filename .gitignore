@@ -1,0 +1,14 @@
+# The throwaway fake home folders the sandbox creates inside projects.
+.isolate-home/
+**/.isolate-home/
+
+# Python build and cache artifacts.
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+
+# Local virtual environment used for development.
+.venv/

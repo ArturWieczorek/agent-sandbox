@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "isolation-container"
+version = "0.1.0"
+description = "A simple isolation layer that runs AI agents inside a safe bubblewrap sandbox"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+]
+
+[project.scripts]
+isolate = "isolate.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+# Let tests import the package straight from src/ without an install step.
+pythonpath = ["src"]
+testpaths = ["tests"]
+# "integration" tests actually launch bwrap; the fast loop skips them with
+# `pytest -m "not integration"`.
+markers = [
+    "integration: tests that launch a real bubblewrap sandbox (needs bwrap)",
+]

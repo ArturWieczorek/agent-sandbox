@@ -1,0 +1,31 @@
+# Example isolate configuration file.
+#
+# Copy this to the root of a project as ".isolate.yml" to change the defaults
+# for that project, or to "~/.config/isolate/config.yml" to change them for
+# every project. Anything you do not list keeps the built-in default.
+#
+# A "profile" is just a named bundle of settings. Pick one at run time with
+# "isolate run --profile NAME -- <command>". The "default" profile is used when
+# you do not name one.
+
+profiles:
+
+  # The everyday profile: the project folder is writable, the internet is on,
+  # and the agent gets a sensible slice of CPU and memory.
+  default:
+    network: true          # allow internet (agents need it to reach their API)
+    memory: 4G             # hard memory cap; the agent cannot use more
+    cpus: 2                # CPU cap in whole cores (2 = up to two full cores)
+    writable:              # folders the agent may change (relative to project)
+      - .
+    readable:              # extra read-only files to expose (optional)
+      - ~/.gitconfig       # so commits keep your name, without exposing secrets
+    home: .isolate-home    # the throwaway fake home, created inside the project
+
+  # A locked-down profile: no internet, nothing writable. Good for letting an
+  # agent read and explain code without changing anything or phoning home.
+  readonly:
+    network: false
+    writable: []
+    readable:
+      - .
