@@ -33,6 +33,9 @@ this repo. Those rules also apply here.
 
 ## How the pieces fit (quick map)
 
+For a detailed, plain-language tour of the design, see
+[docs/architecture.md](docs/architecture.md).
+
 - `config.py` - the resolved settings object, defaults, and value validation.
 - `paths.py` - which host paths form the read-only system base; symlink handling;
   spotting dangerous grants.

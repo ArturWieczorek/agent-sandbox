@@ -124,8 +124,10 @@ assumes you know nothing and builds up with everyday analogies:
 
 ## For people working on this project
 
-See [AGENTS.md](AGENTS.md) for the engineering rules we follow (test-first
-development, the safety model, and how we write docs).
+- [docs/architecture.md](docs/architecture.md): a detailed, plain-language tour of
+  how the code is built (what each file does, where, and why).
+- [AGENTS.md](AGENTS.md): the engineering rules we follow (test-first development,
+  the safety model, and how we write docs).
 
 ## Develop and test
 
