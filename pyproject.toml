@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "isolation-container"
+name = "agent-sandbox"
 version = "0.1.0"
 description = "A simple isolation layer that runs AI agents inside a safe bubblewrap sandbox"
 readme = "README.md"
