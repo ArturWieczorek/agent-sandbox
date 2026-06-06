@@ -58,21 +58,37 @@ same plain language as this page.
 
 You need Linux, Python 3.11 or newer, and the `bubblewrap` package.
 
-```bash
-# 1. Install bubblewrap (Ubuntu/Debian example).
-sudo apt install bubblewrap
+We install with **pipx**, not plain `pip`. On modern Ubuntu/Debian, the system
+Python is "externally managed", which means `pip install .` is blocked on purpose
+to protect the operating system's own Python. pipx sidesteps this cleanly: it puts
+the `isolate` command in its own small private environment and exposes it on your
+PATH, so it just works from any folder.
 
-# 2. Get the code and install it (this gives you the `isolate` command).
+```bash
+# 1. Install bubblewrap and pipx (Ubuntu/Debian example).
+sudo apt install bubblewrap pipx
+
+# 2. Get the code.
 git clone https://github.com/ArturWieczorek/agent-sandbox.git
 cd agent-sandbox
-pip install .
 
-# 3. Check your machine has everything (this never changes anything).
+# 3. Install the `isolate` command in its own isolated environment.
+pipx install .
+pipx ensurepath   # one time: adds isolate to your PATH (open a new terminal after)
+
+# 4. Check your machine has everything (this never changes anything).
 isolate doctor
 ```
 
 `isolate doctor` is like the lights on a car dashboard before a drive: it tells
 you, in plain words, if anything is missing and the exact command to fix it.
+
+> Prefer a virtual environment instead of pipx? That works too, because a venv is
+> a private Python of its own: `python3 -m venv .venv && source .venv/bin/activate
+> && pip install .`. The trade-off is you must activate the venv (or call
+> `.venv/bin/isolate`) each time, whereas pipx makes `isolate` available
+> everywhere. Do not use `pip install --break-system-packages`; that bypasses the
+> very protection the warning is there to provide.
 
 ## Use it
 
