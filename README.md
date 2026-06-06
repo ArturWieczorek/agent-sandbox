@@ -92,26 +92,49 @@ you, in plain words, if anything is missing and the exact command to fix it.
 
 ## Use it
 
+### The easy way: a known agent
+
+Agents like Claude and Gemini live in your home folder, which the bubble never
+mounts, so `isolate run -- claude` cannot find them. The `--agent` flag handles
+that for you: it knows where each known agent lives and grants exactly what it
+needs, nothing more.
+
 ```bash
 # Go into the project you want the agent to work on.
 cd ~/Projects/my-app
 
-# Run the agent inside the bubble. Everything after -- is the command to run.
-isolate run -- claude
+# Run Claude Code inside the bubble (auto-grants what claude needs).
+isolate run --agent claude
 
-# Run with no internet at all (fully air-gapped).
-isolate run --no-network -- claude
+# Same for the Gemini CLI.
+isolate run --agent gemini
+
+# Pass arguments through to the agent: everything after -- goes to it.
+isolate run --agent claude -- --version
+
+# Keep your existing login instead of signing in again each time
+# (wider access: shares the agent's config folder from your home).
+isolate run --agent claude --login
+```
+
+### The general way: any command
+
+For anything that is not a known agent, name the command after `--`:
+
+```bash
+# Run your test suite inside the bubble, air-gapped.
+isolate run --no-network -- pytest
 
 # See exactly what would run, without running it (great for learning).
-isolate run --dry-run -- claude
+isolate run --dry-run -- bash
 
-# Give the agent extra room: more memory, a second writable folder.
-isolate run --memory 8G --allow-write ~/Projects/shared-lib -- claude
+# Give the command extra room: more memory, a second writable folder.
+isolate run --memory 8G --allow-write ~/Projects/shared-lib -- make build
 ```
 
 The word `--` (two dashes on their own) is the fence: everything to the **left**
 configures the bubble; everything to the **right** is the command that runs
-inside it.
+inside it (or, with `--agent`, extra arguments handed to the agent).
 
 Full options and examples are in [docs/usage.md](docs/usage.md).
 

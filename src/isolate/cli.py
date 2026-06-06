@@ -14,7 +14,7 @@ import shlex
 import sys
 from pathlib import Path
 
-from . import paths, profiles, resources, sandbox
+from . import agents, paths, profiles, resources, sandbox
 from .config import ConfigError
 from .doctor import doctor_main
 
@@ -44,6 +44,18 @@ def build_arg_parser() -> argparse.ArgumentParser:
     )
     run.add_argument(
         "--profile", default="default", help="named profile to use (default: default)"
+    )
+    run.add_argument(
+        "--agent",
+        default=None,
+        metavar="NAME",
+        help="run a known agent (claude or gemini); auto-grants the paths it needs",
+    )
+    run.add_argument(
+        "--login",
+        action="store_true",
+        help="with --agent, also share the agent's saved login/config from your "
+        "home (no re-login, but wider access)",
     )
 
     network = run.add_mutually_exclusive_group()
@@ -124,10 +136,32 @@ def _exec(argv: list[str]) -> int:
 
 
 def _run(args: argparse.Namespace, command: list[str]) -> int:
-    if not command:
+    overrides = build_overrides(args)
+    inner_command = command
+
+    if args.agent:
+        # A known agent: work out the real command and the paths it needs, then
+        # fold those grants into the overrides. Any words after -- are passed
+        # through to the agent as extra arguments.
+        try:
+            launch = agents.resolve_agent(
+                args.agent, extra_args=command, login=args.login
+            )
+        except agents.AgentError as error:
+            print(f"error: {error}", file=sys.stderr)
+            return 2
+        inner_command = launch.command
+        overrides["allow_read"] = (overrides.get("allow_read") or []) + [
+            str(p) for p in launch.reads
+        ]
+        if launch.writes:
+            overrides["allow_write"] = (overrides.get("allow_write") or []) + [
+                str(p) for p in launch.writes
+            ]
+    elif not command:
         print(
             "error: no command given. Put the command after --, "
-            "for example: isolate run -- claude",
+            "for example: isolate run -- claude (or use --agent claude)",
             file=sys.stderr,
         )
         return 2
@@ -140,11 +174,11 @@ def _run(args: argparse.Namespace, command: list[str]) -> int:
 
     try:
         config = profiles.resolve(
-            command=command,
+            command=inner_command,
             profile=args.profile,
             project_dir=project_dir,
             config_paths=config_paths,
-            cli_overrides=build_overrides(args),
+            cli_overrides=overrides,
             real_home=real_home,
             term=os.environ.get("TERM"),
         )

@@ -4,6 +4,9 @@ We avoid launching a real sandbox by always using `--dry-run`, which prints the
 command it WOULD run instead of running it. That keeps these tests fast and safe.
 """
 
+from pathlib import Path
+
+from isolate import agents, cli
 from isolate.cli import build_arg_parser, build_overrides, main, split_command
 
 
@@ -79,3 +82,38 @@ def test_main_unknown_profile_errors(tmp_path, monkeypatch, capsys):
     assert rc != 0
     err = capsys.readouterr().err
     assert "profile" in err.lower()
+
+
+def test_agent_unknown_errors(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    rc = main(["run", "--agent", "bard", "--dry-run"])
+    assert rc != 0
+    assert "agent" in capsys.readouterr().err.lower()
+
+
+def test_agent_dry_run_uses_command_and_merges_grants(tmp_path, monkeypatch, capsys):
+    # Fake the agent recipe so the test does not depend on a real agent install.
+    monkeypatch.chdir(tmp_path)
+    fake = agents.AgentLaunch(
+        command=["/opt/claude/bin/claude", "--version"],
+        reads=[Path("/opt/claude")],
+        writes=[],
+    )
+    monkeypatch.setattr(cli.agents, "resolve_agent", lambda *a, **k: fake)
+
+    rc = main(["run", "--agent", "claude", "--no-network", "--dry-run", "--", "--version"])
+    out = capsys.readouterr().out
+
+    assert rc == 0
+    assert "/opt/claude/bin/claude" in out  # the agent command is what runs
+    assert "/opt/claude" in out  # the read grant was mounted into the sandbox
+
+
+def test_agent_does_not_require_command_after_dashes(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    fake = agents.AgentLaunch(command=["/opt/claude/bin/claude"], reads=[], writes=[])
+    monkeypatch.setattr(cli.agents, "resolve_agent", lambda *a, **k: fake)
+
+    rc = main(["run", "--agent", "claude", "--dry-run"])
+    assert rc == 0
+    assert "/opt/claude/bin/claude" in capsys.readouterr().out

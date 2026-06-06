@@ -33,6 +33,8 @@ Runs a command inside the bubble. The options below all belong to `run`.
 
 | Option | Plain meaning |
 | --- | --- |
+| `--agent NAME` | Run a known agent (`claude` or `gemini`) and auto-grant what it needs. |
+| `--login` | With `--agent`, also share the agent's saved login from your home. |
 | `--profile NAME` | Use a named bundle of settings. Default is `default`. |
 | `--no-network` | Cut off the internet completely (air-gapped). |
 | `--network` | Force the internet on (this is already the default). |
@@ -43,6 +45,52 @@ Runs a command inside the bubble. The options below all belong to `run`.
 | `--home PATH` | Use PATH as the throwaway fake home. |
 | `--config FILE` | Read one more config file, layered on top of the rest. |
 | `--dry-run` | Print the command that would run, but do not run it. |
+
+## Running a known agent (claude, gemini)
+
+The agents you want to sandbox (Claude Code, the Gemini CLI) are installed inside
+your home folder. The bubble never mounts your home, so they are invisible by
+default, and a bare `isolate run -- claude` fails with "not found". This is the
+deny-by-default rule doing its job.
+
+`--agent` is the shortcut that fixes this for known tools. It knows where each
+agent lives and grants exactly the read-only paths it needs (the agent's own
+files and, for node-based agents, the Node.js runtime), then runs it.
+
+```bash
+# Run Claude Code, sandboxed to the current project.
+isolate run --agent claude
+
+# Run the Gemini CLI the same way.
+isolate run --agent gemini
+
+# Pass arguments through to the agent (everything after -- goes to it).
+isolate run --agent claude -- --version
+isolate run --agent gemini -- chat
+```
+
+### The login trade-off (`--login`)
+
+With the throwaway fake home, the agent does not see its saved login, so it may
+ask you to sign in again each run. If you would rather keep your login, add
+`--login`:
+
+```bash
+isolate run --agent claude --login
+```
+
+What this does, plainly: it also shares the agent's own config folder from your
+home (where it keeps its settings and sign-in token) and lets the agent read and
+write it. The upside is no repeated sign-in. The trade-off is that the sandboxed
+agent can now read and change that one folder in your real home, which is a little
+more access than the strict default. It is your own agent's data, so this is
+usually fine, but it is opt-in on purpose so the choice is yours.
+
+### What if my agent is not "known"?
+
+Only `claude` and `gemini` are built in today. For anything else, grant the paths
+by hand with `--allow-read` (and run it by its full path), or ask for it to be
+added as a known agent. Use `--dry-run` to see exactly what is shared.
 
 ## Where settings come from (the layer cake)
 

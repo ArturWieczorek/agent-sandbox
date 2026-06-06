@@ -144,6 +144,19 @@ assembly line uses it.
   "is systemd here?" check is the one small peek at the real machine, and it is
   isolated so callers can fake it.
 
+### `agents.py` - recipes for known agents
+
+- **What it is:** for each supported agent (`claude`, `gemini`), works out the
+  exact command to run inside the sandbox and the read-only paths to grant so the
+  agent and its runtime can be found. Key function: `resolve_agent`.
+- **Where:** `src/isolate/agents.py`.
+- **What for:** agents live under your home, which the bubble never mounts, so
+  they are invisible by default. This file is the **coat-check ticket**: say "the
+  usual for Claude" and it fetches exactly the right grants, so `cli.py` can offer
+  a simple `--agent claude` instead of a pile of `--allow-read` flags.
+- **Thinker or doer:** thinker. It looks up where a tool lives (via an injectable
+  `which`), but launches nothing; `cli.py` does the launching.
+
 ### `cli.py` - the front desk (a doer)
 
 - **What it is:** reads the command line, splits your isolate flags from the inner
@@ -273,6 +286,11 @@ Use the assembly line to decide where new code belongs:
   `SandboxConfig` in `config.py`, add validation there, teach `profiles.resolve`
   to fill it from config/flags, and teach `sandbox.py` or `resources.py` to use
   it. Add a flag in `cli.py`. Write the pure tests first.
+- **Supporting a new known agent.** Add a small resolver in `agents.py` that
+  returns the command to run plus the read paths it needs, and route it from
+  `resolve_agent`. No other file needs to change, because `cli.py` already folds
+  an agent's grants into the overrides. Write the recipe's tests first, using a
+  fake `which` and a temp home.
 - **Turning on seccomp** (see [primers/seccomp.md](primers/seccomp.md)). This is a
   new bwrap flag, so it belongs in `sandbox.build_bwrap_args`, driven by a new
   config field. The filter file handling would be a small new helper.
@@ -304,6 +322,7 @@ anything that reads the live machine or launches a process goes in the **doers**
 | `src/isolate/profiles.py` | Read config files, merge layers, resolve final config |
 | `src/isolate/sandbox.py` | Build the `bwrap` command (and wrap with limits) |
 | `src/isolate/resources.py` | Build the `systemd-run` scope for CPU/memory limits |
+| `src/isolate/agents.py` | Recipes for known agents (claude, gemini): command + grants |
 | `src/isolate/cli.py` | Parse input, wire it together, launch the sandbox |
 | `src/isolate/doctor.py` | Pre-flight health checks |
 | `tests/` | Fast pure tests |

@@ -41,6 +41,8 @@ For a detailed, plain-language tour of the design, see
   spotting dangerous grants.
 - `sandbox.py` - pure builders: `build_bwrap_args` and `build_command`.
 - `resources.py` - the systemd scope that applies CPU/memory limits.
+- `agents.py` - recipes for known agents (claude, gemini): the command to run and
+  the read grants they need.
 - `profiles.py` - load config files, merge layers, resolve to a `SandboxConfig`.
 - `cli.py` / `doctor.py` - the edges: parse input, prepare the system, launch,
   and run health checks.
@@ -49,6 +51,17 @@ For a detailed, plain-language tour of the design, see
 
 A running log of non-obvious things we discovered. Each entry: what we expected,
 what actually happened, and what to do about it.
+
+### Agents live in your home, so they are invisible by default
+
+- **Expected:** `isolate run -- claude` would just work.
+- **Reality:** claude and gemini are installed under the user's home (for example
+  `~/.local/share/claude` and `~/.nvm/...`), which the bubble never mounts, so the
+  command is "not found" inside. Claude is a self-contained binary; gemini is a
+  node app that also needs the Node.js runtime mounted.
+- **Apply:** use the `--agent` recipes in `agents.py`, which grant exactly the
+  agent's files (and node for gemini). Run node agents as `node <script>` rather
+  than relying on a shebang or PATH inside the sandbox.
 
 ### Writes to unbound paths are ephemeral, not blocked
 
