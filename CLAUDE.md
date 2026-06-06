@@ -1,4 +1,4 @@
-# Project CLAUDE.md (isolation-container)
+# Project CLAUDE.md (agent-sandbox)
 
 These are hard rules for this repo. They override default behavior. Follow them
 exactly, in code, in docs, and in everything you write to the user.

@@ -1,4 +1,8 @@
-# isolate - a simple safety bubble for AI agents
+# agent-sandbox - a simple safety bubble for AI agents
+
+> The project is called **agent-sandbox**. The command you actually type is
+> **`isolate`** (short and easy). Same tool, two names: one is the repo, one is
+> the command, much like the project "ripgrep" ships the `rg` command.
 
 ## What is this, in one sentence?
 
@@ -58,7 +62,9 @@ You need Linux, Python 3.11 or newer, and the `bubblewrap` package.
 # 1. Install bubblewrap (Ubuntu/Debian example).
 sudo apt install bubblewrap
 
-# 2. Install isolate itself.
+# 2. Get the code and install it (this gives you the `isolate` command).
+git clone https://github.com/ArturWieczorek/agent-sandbox.git
+cd agent-sandbox
 pip install .
 
 # 3. Check your machine has everything (this never changes anything).
@@ -133,3 +139,10 @@ pytest -m "not integration"
 # Everything, including real bubblewrap runs:
 pytest
 ```
+
+## License
+
+Released under the MIT License. In plain words: you may freely use, copy, change,
+and share this code, including for commercial use, as long as you keep the
+copyright notice. It comes with no warranty. See the [LICENSE](LICENSE) file for
+the full text.
