@@ -52,6 +52,18 @@ For a detailed, plain-language tour of the design, see
 A running log of non-obvious things we discovered. Each entry: what we expected,
 what actually happened, and what to do about it.
 
+### Agent login persists after one sign-in, not zero
+
+- **Expected:** with `--login`, the existing host login would be reused with no
+  sign-in at all.
+- **Reality:** the host login often lives in the OS keychain (the claude binary
+  references "keychain" heavily), which the sandbox does not expose on purpose. So
+  the first `--login` run still prompts; that sign-in is then written as a file in
+  the shared config dir (`CLAUDE_CONFIG_DIR` = `~/.claude`, bound writable) and is
+  reused on every later run, across projects. Verified by the user.
+- **Apply:** document this as "sign in once, then it persists", not "never sign
+  in". Do not try to bind the keychain in; that would defeat the isolation.
+
 ### Granting an agent's config is not enough; point it there too
 
 - **Expected:** `--login` granting the real `~/.claude` would let claude reuse the

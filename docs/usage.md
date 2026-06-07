@@ -89,11 +89,16 @@ for Claude, `GEMINI_DIR` for Gemini. Without that variable the agent would still
 look inside the throwaway home and miss the login, which is why simply granting
 the folder is not enough on its own.
 
-The upside is no repeated sign-in (and the login stays in sync with your normal,
-non-sandboxed agent). The trade-off is that the sandboxed agent can now read and
-change that one folder in your real home, which is a little more access than the
-strict default. It is your own agent's data, so this is usually fine, but it is
-opt-in on purpose so the choice is yours.
+Expect to sign in once. Many agents keep their real login in the operating
+system keychain, which the sandbox deliberately does not expose (that is part of
+keeping your secrets out). So the first `--login` run inside the sandbox may still
+ask you to sign in. That one sign-in is then saved as a file in the shared config
+folder, and every later run reuses it, even in other projects, with no prompt.
+
+The trade-off is that the sandboxed agent can now read and change that one config
+folder in your real home, which is a little more access than the strict default.
+It is your own agent's data, so this is usually fine, but it is opt-in on purpose
+so the choice is yours.
 
 ### What if my agent is not "known"?
 
