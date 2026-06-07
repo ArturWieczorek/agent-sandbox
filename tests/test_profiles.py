@@ -101,6 +101,28 @@ def test_apply_cli_overrides_ignores_none_values():
     assert out["network"] is True
 
 
+def test_apply_cli_overrides_merges_env():
+    base = {"network": True, "writable": ["."], "readable": [], "env": {"A": "1"}}
+    out = apply_cli_overrides(base, {"env": {"B": "2", "A": "9"}})
+    assert out["env"] == {"A": "9", "B": "2"}  # override wins on conflict
+
+
+def test_resolve_sets_env_from_overrides(tmp_path):
+    project = tmp_path / "proj"
+    project.mkdir()
+    cfg = resolve(
+        command=["x"],
+        profile="default",
+        project_dir=project,
+        config_paths=[],
+        cli_overrides={"env": {"CLAUDE_CONFIG_DIR": "/h/.claude"}},
+        real_home=tmp_path,
+        term=None,
+        system_mounts_fn=fake_system_mounts,
+    )
+    assert cfg.env == {"CLAUDE_CONFIG_DIR": "/h/.claude"}
+
+
 def test_resolve_produces_absolute_paths_and_fake_home(tmp_path):
     project = tmp_path / "proj"
     project.mkdir()

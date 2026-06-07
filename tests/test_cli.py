@@ -109,6 +109,41 @@ def test_agent_dry_run_uses_command_and_merges_grants(tmp_path, monkeypatch, cap
     assert "/opt/claude" in out  # the read grant was mounted into the sandbox
 
 
+def test_env_flag_parsed_into_dict():
+    args = build_arg_parser().parse_args(["run", "--env", "FOO=bar", "--env", "BAZ=qux"])
+    assert build_overrides(args)["env"] == {"FOO": "bar", "BAZ": "qux"}
+
+
+def test_env_flag_keeps_equals_in_value():
+    args = build_arg_parser().parse_args(["run", "--env", "URL=https://a=b"])
+    assert build_overrides(args)["env"] == {"URL": "https://a=b"}
+
+
+def test_env_flag_without_equals_errors(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    rc = main(["run", "--env", "NOEQUALS", "--dry-run", "--", "echo", "hi"])
+    assert rc != 0
+    assert "env" in capsys.readouterr().err.lower()
+
+
+def test_agent_login_dry_run_injects_config_env(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    fake = agents.AgentLaunch(
+        command=["/opt/claude/bin/claude"],
+        reads=[],
+        writes=[Path("/home/u/.claude")],
+        env={"CLAUDE_CONFIG_DIR": "/home/u/.claude"},
+    )
+    monkeypatch.setattr(cli.agents, "resolve_agent", lambda *a, **k: fake)
+
+    rc = main(["run", "--agent", "claude", "--login", "--dry-run"])
+    out = capsys.readouterr().out
+
+    assert rc == 0
+    assert "--setenv CLAUDE_CONFIG_DIR /home/u/.claude" in out
+    assert "/home/u/.claude" in out  # config dir granted writable too
+
+
 def test_agent_does_not_require_command_after_dashes(tmp_path, monkeypatch, capsys):
     monkeypatch.chdir(tmp_path)
     fake = agents.AgentLaunch(command=["/opt/claude/bin/claude"], reads=[], writes=[])

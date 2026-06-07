@@ -93,6 +93,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
         help="extra path the sandbox may read (repeatable)",
     )
     run.add_argument(
+        "--env",
+        action="append",
+        default=None,
+        metavar="KEY=VALUE",
+        help="set an environment variable inside the sandbox (repeatable)",
+    )
+    run.add_argument(
         "--config", default=None, help="extra config file to layer on top"
     )
     run.add_argument(
@@ -105,6 +112,21 @@ def build_arg_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _parse_env(items: list[str] | None) -> dict[str, str]:
+    """Parse repeated KEY=VALUE strings into a dict.
+
+    Splitting on the first "=" only means a value may itself contain "=" (handy
+    for things like URLs). A token with no "=" is a clear error.
+    """
+    env: dict[str, str] = {}
+    for item in items or []:
+        if "=" not in item:
+            raise ConfigError(f"--env expects KEY=VALUE, got {item!r}")
+        key, value = item.split("=", 1)
+        env[key] = value
+    return env
+
+
 def build_overrides(args: argparse.Namespace) -> dict:
     """Turn parsed run-flags into the overrides dict the resolver expects."""
     return {
@@ -114,6 +136,7 @@ def build_overrides(args: argparse.Namespace) -> dict:
         "home": args.home,
         "allow_write": args.allow_write,
         "allow_read": args.allow_read,
+        "env": _parse_env(args.env),
     }
 
 
@@ -136,7 +159,11 @@ def _exec(argv: list[str]) -> int:
 
 
 def _run(args: argparse.Namespace, command: list[str]) -> int:
-    overrides = build_overrides(args)
+    try:
+        overrides = build_overrides(args)
+    except ConfigError as error:
+        print(f"error: {error}", file=sys.stderr)
+        return 2
     inner_command = command
 
     if args.agent:
@@ -158,6 +185,8 @@ def _run(args: argparse.Namespace, command: list[str]) -> int:
             overrides["allow_write"] = (overrides.get("allow_write") or []) + [
                 str(p) for p in launch.writes
             ]
+        if launch.env:
+            overrides["env"] = {**(overrides.get("env") or {}), **launch.env}
     elif not command:
         print(
             "error: no command given. Put the command after --, "

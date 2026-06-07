@@ -52,6 +52,18 @@ For a detailed, plain-language tour of the design, see
 A running log of non-obvious things we discovered. Each entry: what we expected,
 what actually happened, and what to do about it.
 
+### Granting an agent's config is not enough; point it there too
+
+- **Expected:** `--login` granting the real `~/.claude` would let claude reuse the
+  saved sign-in.
+- **Reality:** claude runs with HOME set to the throwaway home, so it looked for
+  its config inside that throwaway home and ignored the granted real folder. The
+  browser sign-in appeared every run.
+- **Apply:** also set the agent's config-dir variable inside the sandbox
+  (`CLAUDE_CONFIG_DIR` for claude, `GEMINI_DIR` for gemini) pointing at the real
+  folder. This needed a general "inject env vars" capability (`SandboxConfig.env`
+  -> `--setenv`), which is now reusable via the `--env KEY=VALUE` flag.
+
 ### Agents live in your home, so they are invisible by default
 
 - **Expected:** `isolate run -- claude` would just work.

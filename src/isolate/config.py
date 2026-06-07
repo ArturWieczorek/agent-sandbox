@@ -106,5 +106,9 @@ class SandboxConfig:
     """(target, link_path) pairs to recreate inside the sandbox, for merged-/usr
     layouts where /bin, /lib, etc. are symlinks into /usr."""
 
+    env: dict[str, str] = field(default_factory=dict)
+    """Extra environment variables to set inside the sandbox, on top of the
+    baseline HOME/PATH/TERM (e.g. CLAUDE_CONFIG_DIR for agent login)."""
+
     command: list[str] = field(default_factory=list)
     """The actual command to run inside the sandbox."""

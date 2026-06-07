@@ -42,6 +42,7 @@ Runs a command inside the bubble. The options below all belong to `run`.
 | `--cpus N` | CPU cap in cores, like `2` or `0.5` (half a core). |
 | `--allow-write PATH` | Let the bubble also write to PATH. Repeatable. |
 | `--allow-read PATH` | Let the bubble also read PATH (read-only). Repeatable. |
+| `--env KEY=VALUE` | Set an environment variable inside the bubble. Repeatable. |
 | `--home PATH` | Use PATH as the throwaway fake home. |
 | `--config FILE` | Read one more config file, layered on top of the rest. |
 | `--dry-run` | Print the command that would run, but do not run it. |
@@ -79,12 +80,20 @@ ask you to sign in again each run. If you would rather keep your login, add
 isolate run --agent claude --login
 ```
 
-What this does, plainly: it also shares the agent's own config folder from your
-home (where it keeps its settings and sign-in token) and lets the agent read and
-write it. The upside is no repeated sign-in. The trade-off is that the sandboxed
-agent can now read and change that one folder in your real home, which is a little
-more access than the strict default. It is your own agent's data, so this is
-usually fine, but it is opt-in on purpose so the choice is yours.
+What this does, plainly: the sandbox normally gives the agent a fresh, empty home
+each run, so the agent cannot see its saved login. `--login` fixes that in two
+steps. First, it shares the agent's own config folder from your real home, as a
+writable bind. Second (the important part), it tells the agent to look there by
+setting the agent's config-dir variable inside the sandbox: `CLAUDE_CONFIG_DIR`
+for Claude, `GEMINI_DIR` for Gemini. Without that variable the agent would still
+look inside the throwaway home and miss the login, which is why simply granting
+the folder is not enough on its own.
+
+The upside is no repeated sign-in (and the login stays in sync with your normal,
+non-sandboxed agent). The trade-off is that the sandboxed agent can now read and
+change that one folder in your real home, which is a little more access than the
+strict default. It is your own agent's data, so this is usually fine, but it is
+opt-in on purpose so the choice is yours.
 
 ### What if my agent is not "known"?
 

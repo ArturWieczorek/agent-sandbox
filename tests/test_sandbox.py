@@ -94,6 +94,21 @@ def test_clearenv_then_minimal_env_is_set():
     assert has_seq(args, ["--setenv", "TERM", "xterm-256color"])
 
 
+def test_extra_env_vars_are_set_after_clearenv():
+    args = build_bwrap_args(
+        make_config(env={"CLAUDE_CONFIG_DIR": "/home/u/.claude", "FOO": "bar"})
+    )
+    assert has_seq(args, ["--setenv", "CLAUDE_CONFIG_DIR", "/home/u/.claude"])
+    assert has_seq(args, ["--setenv", "FOO", "bar"])
+    # Injected vars must come after the environment is wiped, or they vanish.
+    assert args.index("--clearenv") < args.index("CLAUDE_CONFIG_DIR")
+
+
+def test_no_extra_env_by_default():
+    args = build_bwrap_args(make_config())
+    assert "CLAUDE_CONFIG_DIR" not in args
+
+
 def test_extra_readable_paths_are_read_only_binds():
     cfg = make_config(readable=[Path("/home/user/.gitconfig")])
     args = build_bwrap_args(cfg)

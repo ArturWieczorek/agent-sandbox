@@ -40,6 +40,10 @@ class AgentLaunch:
     writes: list[Path] = field(default_factory=list)
     """Extra writable paths (only used with login mode, for the agent's config)."""
 
+    env: dict[str, str] = field(default_factory=dict)
+    """Extra environment variables to set (login mode points the agent at its
+    real config dir, e.g. CLAUDE_CONFIG_DIR / GEMINI_DIR)."""
+
 
 def _dedup(paths: list[Path]) -> list[Path]:
     """Drop duplicates while keeping the first-seen order."""
@@ -87,8 +91,17 @@ def _resolve_claude(extra_args, login, which, home) -> AgentLaunch:
     # that whole folder (covers every installed version) plus the resolved binary
     # in case it lives elsewhere. Missing paths are skipped safely at mount time.
     reads = _dedup([home / ".local" / "share" / "claude", real])
-    writes = [home / ".claude", home / ".claude.json"] if login else []
-    return AgentLaunch(command=[str(real), *extra_args], reads=reads, writes=writes)
+    writes: list[Path] = []
+    env: dict[str, str] = {}
+    if login:
+        # Point claude at your real config dir (and share it writable) so it finds
+        # your saved login instead of starting fresh in the throwaway home.
+        config_dir = home / ".claude"
+        writes = [config_dir, home / ".claude.json"]
+        env = {"CLAUDE_CONFIG_DIR": str(config_dir)}
+    return AgentLaunch(
+        command=[str(real), *extra_args], reads=reads, writes=writes, env=env
+    )
 
 
 def _resolve_gemini(extra_args, login, which, home) -> AgentLaunch:
@@ -113,11 +126,19 @@ def _resolve_gemini(extra_args, login, which, home) -> AgentLaunch:
     if node_real.parent.name == "bin":
         reads.append(node_real.parent.parent)
     reads += [node_real, gem_real]
-    writes = [home / ".gemini"] if login else []
+    writes: list[Path] = []
+    env: dict[str, str] = {}
+    if login:
+        # The Gemini CLI reads its config from GEMINI_DIR; point it at the real
+        # ~/.gemini and share it writable so the saved login is reused.
+        config_dir = home / ".gemini"
+        writes = [config_dir]
+        env = {"GEMINI_DIR": str(config_dir)}
     # Run gemini explicitly through node so we do not depend on a shebang or on
     # node being on PATH inside the sandbox.
     return AgentLaunch(
         command=[str(node_real), str(gem_real), *extra_args],
         reads=_dedup(reads),
         writes=writes,
+        env=env,
     )

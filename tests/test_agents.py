@@ -40,6 +40,21 @@ def test_resolve_claude_login_grants_config(tmp_path):
 
     assert (home / ".claude") in launch.writes
     assert (home / ".claude.json") in launch.writes
+    # The key fix: point claude at the real config dir so it finds the login.
+    assert launch.env["CLAUDE_CONFIG_DIR"] == str(home / ".claude")
+
+
+def test_resolve_claude_without_login_sets_no_env(tmp_path):
+    home = tmp_path
+    real = home / ".local" / "share" / "claude" / "versions" / "x"
+    real.parent.mkdir(parents=True)
+    real.write_text("x")
+    which = lambda name: str(real) if name == "claude" else None
+
+    launch = resolve_agent("claude", extra_args=[], which=which, home=home)
+
+    assert launch.env == {}
+    assert launch.writes == []
 
 
 def test_resolve_claude_missing_raises(tmp_path):
@@ -89,6 +104,7 @@ def test_resolve_gemini_login_grants_config(tmp_path):
     launch = resolve_agent("gemini", extra_args=[], login=True, which=which, home=home)
 
     assert (home / ".gemini") in launch.writes
+    assert launch.env["GEMINI_DIR"] == str(home / ".gemini")
 
 
 def test_unknown_agent_raises(tmp_path):

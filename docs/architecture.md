@@ -88,7 +88,9 @@ assembly line uses it.
 
 - **What it is:** defines the `SandboxConfig` blueprint, the built-in default
   settings (`BUILTIN_DEFAULTS`), and small validators (`validate_memory`,
-  `validate_cpus`) that reject nonsense like `--memory loads`.
+  `validate_cpus`) that reject nonsense like `--memory loads`. The blueprint also
+  carries an `env` dict (extra environment variables to set inside the sandbox,
+  used for things like `CLAUDE_CONFIG_DIR` in agent login).
 - **Where:** `src/isolate/config.py`.
 - **What for:** it is the shared vocabulary. Almost every other file imports the
   `SandboxConfig` type from here. Think of it as the **blank order ticket** plus
@@ -153,7 +155,9 @@ assembly line uses it.
 - **What for:** agents live under your home, which the bubble never mounts, so
   they are invisible by default. This file is the **coat-check ticket**: say "the
   usual for Claude" and it fetches exactly the right grants, so `cli.py` can offer
-  a simple `--agent claude` instead of a pile of `--allow-read` flags.
+  a simple `--agent claude` instead of a pile of `--allow-read` flags. With
+  `--login` it also returns the env var that points the agent at your real config
+  dir (`CLAUDE_CONFIG_DIR` / `GEMINI_DIR`) so your sign-in is reused.
 - **Thinker or doer:** thinker. It looks up where a tool lives (via an injectable
   `which`), but launches nothing; `cli.py` does the launching.
 

@@ -92,6 +92,9 @@ def apply_cli_overrides(profile_dict: dict, overrides: dict) -> dict:
     extra_read = overrides.get("allow_read")
     if extra_read:
         out["readable"] = list(out.get("readable", [])) + list(extra_read)
+    env_override = overrides.get("env")
+    if env_override:
+        out["env"] = {**out.get("env", {}), **env_override}
     return out
 
 
@@ -168,4 +171,5 @@ def resolve(
         term=term,
         command=list(command),
         symlinks=symlinks,
+        env=dict(profile_dict.get("env", {})),
     )

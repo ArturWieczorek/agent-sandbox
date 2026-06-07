@@ -72,6 +72,10 @@ def build_bwrap_args(config: SandboxConfig) -> list[str]:
     args += ["--setenv", "PATH", "/usr/bin:/bin"]
     if config.term:
         args += ["--setenv", "TERM", config.term]
+    # Any extra variables requested (e.g. CLAUDE_CONFIG_DIR for agent login),
+    # sorted for deterministic output.
+    for key in sorted(config.env):
+        args += ["--setenv", key, config.env[key]]
 
     # 10. Finally, the command to run, after a bare "--" so bwrap stops parsing
     #     its own options and treats the rest as the program plus its arguments.
