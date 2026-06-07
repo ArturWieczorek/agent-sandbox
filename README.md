@@ -41,6 +41,11 @@ not open any other door. When they are done, we throw the room key away.
    on how much memory and CPU the agent can take, so a runaway agent cannot freeze
    your machine.
 
+For a plain-language walkthrough of exactly what the agent **can** and **cannot**
+do when you run it in a project folder (the freedoms, the limits, and the
+everyday friction), see
+[docs/how-it-works-in-practice.md](docs/how-it-works-in-practice.md).
+
 ## The engine under the hood
 
 `isolate` is a thin, friendly wrapper around two standard Linux tools:
@@ -155,6 +160,8 @@ told honestly:
 If words like "namespace" or "cgroup" are new to you, start here. Each primer
 assumes you know nothing and builds up with everyday analogies:
 
+- [How it works in practice](docs/how-it-works-in-practice.md) (what the agent can
+  and cannot do in your project, in plain language)
 - [What isolation means](docs/primers/isolation-basics.md)
 - [Namespaces (separate views of the system)](docs/primers/namespaces.md)
 - [cgroups (limits on CPU and memory)](docs/primers/cgroups.md)
